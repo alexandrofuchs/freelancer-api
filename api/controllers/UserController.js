@@ -9,6 +9,7 @@ const router = express.Router();
 
 //const isAdmin = require('../middlewares/isAdmin');
 const User = require('../../database/models/User');
+const isAuthenticate = require('../middlewares/isAuthenticate');
 
 router.post('/authenticate',
     body('email').isEmail(),
@@ -34,7 +35,7 @@ router.post('/authenticate',
             }
 
             if (password !== foundUser.password) {
-                return res.status(400).json({ message: "Credênciais inválidas!", data: null });
+                return res.status(400).json({ error: "Credênciais inválidas!" });
             }
 
             // if (!await bcrypt.compare(password, foundUser.password)) {
@@ -50,14 +51,14 @@ router.post('/authenticate',
                 expiresIn: 60 * 60 * 60
             })
 
-            return res.status(200).json({ data: token });
+            return res.status(200).json({ token });
 
         } catch (err) {
             console.log(err.message);
-            return res.status(500).json({ message: "Server Error!" });
+            return res.status(500).json({ error: "Server Error!" });
         }
     });
-//router.get('/validate', isAuthenticate, async (req, res) => await res.status(200).json(true));
+router.get('/validate', isAuthenticate, async (req, res) => await res.status(200).json(true));
 
 router.post('/', async (req, res) => {
     const createUser = await User.create({
