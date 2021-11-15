@@ -13,8 +13,8 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }))
 
-require('./api/controllers/userController')(app);
-// require('./api/controllers/addressController')(app);
+require('./api/controllers/UserController')(app);
+require('./api/controllers/UserProfileController')(app);
 // require('./api/controllers/productController')(app);
 // require('./api/controllers/categoryController')(app);
 // require('./api/controllers/orderController')(app);
