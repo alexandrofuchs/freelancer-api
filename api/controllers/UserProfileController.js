@@ -5,10 +5,11 @@ const User = require('../../database/models/User');
 const isAuthenticate = require('../middlewares/isAuthenticate');
 const Profile = require('../../database/models/Profile');
 
-const { isValidUUID, minLength, maxLength } = require('../helpers/validators');
+const { isValidUUID, minLength, maxLength, isWord } = require('../helpers/validators');
 const { max } = require('../../database/models/User');
 const { body, validationResult } = require('express-validator');
-const ProfileItem = require('../../database/models/ProfileItems');
+const ProfileItem = require('../../database/models/ProfileItem');
+const { isArray } = require('lodash');
 
 router.route('/users/:userId/profiles')
     .all(async (req, res, next) => {
@@ -19,13 +20,15 @@ router.route('/users/:userId/profiles')
     }).get(async (req, res) => {
         try {
 
-            const foundProfile = await Profile.findOne({ where: { userId: req.params.userId } });
+            console.log(req.params)
+
+            const foundProfile = await Profile.findOne({ where: { userId: req.params.userId }, include: [{association:'items'}] });
 
             if (!foundProfile) {
                 return res.status(400).json({ error: "Perfil não encontrado" });
             }
 
-            return res.status(200).json({ foundProfile });
+            return res.status(200).json(foundProfile);
 
         } catch (err) {
             console.log(err.message);
@@ -34,38 +37,42 @@ router.route('/users/:userId/profiles')
     }).post(
         body('biography').isLength({ max: 200 }),
         body('othersInfo').isLength({ max: 200 }),
-        body('items').isArray(),
+        
         async (req, res) => {
             try {
 
                 const errors = validationResult(req);
 
+                const { biography, items, otherInfo } = req.body;
+
+                const { userId } = req.params;
+                console.log(userId);
+
+                console.log(items);
+
                 if (!errors.isEmpty()) {
                     return res.status(400).json({ errors: errors.array() });
                 }
 
-                const { userId } = req.params;
+                const user = await User.findOne({ where: { id: req.params.userId }, include:[{association:'profile'}]});
 
-                const { biografy, items, otherInfo } = req.body;
-
-                const user = await User.findOne({ where: { id: req.params.id } });
-
-                if (!user) {
-                    return res.status(400).json({ error: "Usuário não encontrado" });
+                if(!user){
+                    return res.status(400).json({ error: "usuário inválido" });
                 }
 
-                const createdProfile = await Profile.upsert({
-                    biografy,
-                    items,
-                    otherInfo,
-                }, {
-                    where: { userId }, include: [{
-                        association: ProfileItem,
-                        as: 'items',
-                    }]
-                });
+                await Profile.update({ biography, otherInfo }, {where: {id: user.profile.id}});
 
-                return res.status(200).json({ createdProfile });
+                isArray(items) ? items.map( async (item) => {
+                    await ProfileItem.findOrCreate({
+                        where: { title: item.title, description: item.description, profileId: user.profile.id }
+                    })
+                }): null;
+                
+                const upserted = await Profile.findOne({where: { id: user.profile.id }, include: [{association:'items'}] });
+
+
+
+                return res.status(200).json(upserted);
 
             } catch (err) {
                 console.log(err.message);

@@ -20,7 +20,7 @@ class ProfileItem extends Model {
     }
 
     static associate(models) {
-        this.belongsTo(models.Profile, { foreignKey: 'profileId', as: 'items' });
+        this.belongsTo(models.Profile, { foreignKey: 'profileId', as: 'profile' });        
     }
 }
 

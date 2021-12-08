@@ -32,6 +32,8 @@ class User extends Model {
 
     static associate(models) {
         this.hasOne(models.Profile, { foreignKey: 'userId', as: 'profile' });
+        this.hasMany(models.Service, { foreignKey: 'userId', as: 'services' });
+        //this.hasMany(models.ServiceOrder, { foreignKey: 'serviceId', as: 'serviceOrders' });
     }
 }
 

@@ -11,6 +11,8 @@ const router = express.Router();
 const User = require('../../database/models/User');
 const isAuthenticate = require('../middlewares/isAuthenticate');
 const Profile = require('../../database/models/Profile');
+const isValidId = require('../middlewares/isValidId');
+const { isValidUUID } = require('../helpers/validators');
 
 const authenticate = async (req, res) => {
     try {
@@ -134,9 +136,6 @@ router.post('/',
 );
 
 
-
-
-
 router.get('/', async (req, res) => {
     const foundUsers = await User.findAll();
     return res.status(200).json({ foundUsers });
@@ -144,7 +143,7 @@ router.get('/', async (req, res) => {
 
 //router.put('/:id/password', isValidID, updatePassword);
 router.put('/:id',
-
+    isValidId,
     //body('email').isEmail(),
     body('firstName').isLength({ min: 3 }).isAlpha(),
     body('lastName').isLength({ min: 3 }).isAlpha(),
@@ -180,11 +179,19 @@ router.put('/:id',
     });
 
 router.route('/:id')
-    //.all(isValidID, isAuthenticate)
+    .all(
+        async (req, res, next) => {
+            if (!isValidUUID(req.params.id)) {
+                return res.status(400).json({ error: 'ID usuário inválido' });
+            }
+            next();
+        }
+
+    )
     .get(async (req, res) => {
         try {
-            const foundUser = await User.findOne({ where: { id: req.params.id } });
-            return res.status(200).json({ data: foundUser });
+            const foundUser = await User.findOne({ where: { id: req.params.id }, include: [{association:'profile', include: [ { association: 'items'} ]}] });
+            return res.status(200).json(foundUser);
 
         } catch (err) {
             console.log(err.message);
