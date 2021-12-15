@@ -21,12 +21,12 @@ class Schedule extends Model {
                 defaultValue: false,
               },
               startTime:{
-                type: DataTypes.STRING,
-                defaultValue:'none'
+                type: DataTypes.TIME,
+                defaultValue: '00:00'
               },
               endTime:{
-                type: DataTypes.STRING,
-                defaultValue:'none'
+                type: DataTypes.TIME,
+                defaultValue:'00:00'
               },
               sunday:{
                 type: DataTypes.BOOLEAN,

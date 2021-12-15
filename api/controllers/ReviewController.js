@@ -30,7 +30,8 @@ router.route('/services/:serviceId/reviews')
             console.log(err.message);
             return res.status(500).json({ error: "Server Error!" });
         }
-    }).post(
+    })
+    .post(
         async (req, res) => {
             try {
 
@@ -60,6 +61,34 @@ router.route('/services/:serviceId/reviews')
                 console.log(err.message);
                 return res.status(500).json({ error: "Server Error!" })
             }
-        });
+        })
+        
+        
+    
+router.route('/services/:serviceId/reviews/average')
+    .all(async (req, res, next) => {
+        if (!isValidUUID(req.params.serviceId)) {
+            return res.status(400).json({ error: 'ID inválido' });
+        }
+        next();
+    }).get(
+            async (req, res) => {
+                try {
+                    const foundReview = await Review.findAndCountAll({attributes:['grade']});
+                    
+                    let average = 0;
+                    foundReview.rows.map(
+                        item => average += item.grade
+                    )
+
+                    return res.status(200).json(average/foundReview.count);
+                } catch (error) {
+                    console.log(error);
+                    return res.status(500).json({ error: 'Server Error!'});
+                }
+            }
+        );
+
+
 
 module.exports = app => app.use('/', router);

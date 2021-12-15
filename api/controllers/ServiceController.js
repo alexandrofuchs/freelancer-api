@@ -13,6 +13,7 @@ const isAuthenticate = require('../middlewares/isAuthenticate');
 const Profile = require('../../database/models/Profile');
 const isValidId = require('../middlewares/isValidId');
 const Service = require('../../database/models/Service');
+const ServiceItem = require('../../database/models/ServiceItem');
 const { isValidUUID } = require('../helpers/validators');
 const isNumber = require('lodash.isnumber');
 const isInteger = require('lodash.isinteger');
@@ -34,9 +35,13 @@ router.route('/users/:userId/services/:id?')
         async (req, res) => {
             try {
 
-                const { title, abstract, description, schedule, items } = req.body;
+                console.log(req.body)
 
-                if (!title | !abstract | !description | !items ) {
+                const { title, abstract, description, schedule, items, typeService } = req.body;
+
+
+
+                if (!title | !abstract | !description | !typeService | !schedule | !items) {
                     return res.status(400).json({ error: 'valores inválidos' });
                 }
 
@@ -48,27 +53,37 @@ router.route('/users/:userId/services/:id?')
 
                 if(req.params.id){
 
-                    const updatedService = await Service.update({
+                    await Service.update({
                         title,
                         abstract,
-                        description,
-                        items: isArray(items) ? items : [],
-                        schedule:{
-                            active: !!schedule.active ? schedule.active : false,
-                            startTime: !!schedule.startTime ? schedule.startTime : 'none',
-                            endTime: !!schedule.endTime ? schedule.endTime : 'none',
-                            sunday: !!schedule.sunday ? schedule.sunday : false,
-                            monday: !!schedule.monday ? schedule.monday : false,
-                            tuesday: !!schedule.tuesday ? schedule.tuesday : false,
-                            wednesday: !!schedule.wednesday ? schedule.wednesday : false,
-                            thursday: !!schedule.thursday ? schedule.thursday : false,
-                            friday: !!schedule.friday ? schedule.friday : false,
-                            saturday: !!schedule.saturday ? schedule.saturday : false,
-                        },                        
+                        description,  
+                        typeService       
                     }, {
-                        where: { id: req.params.id, userId: req.params.userId},
-                        include: [{association: 'schedule'},{association:'items'}]
+                        where: { id: req.params.id, userId: req.params.userId},                        
                     })
+
+                    isArray(items) ? items.map( async (item) => {
+                        await ServiceItem.findOrCreate({
+                            where: { title: item.title, description: item.description, serviceId: req.params.id }
+                        })
+                    }): null;
+
+                    await Schedule.update({                        
+                        active: !!schedule.active ? schedule.active : false,
+                        startTime: !!schedule.startTime ? schedule.startTime : 'none',
+                        endTime: !!schedule.endTime ? schedule.endTime : 'none',
+                        sunday: !!schedule.sunday ? schedule.sunday : false,
+                        monday: !!schedule.monday ? schedule.monday : false,
+                        tuesday: !!schedule.tuesday ? schedule.tuesday : false,
+                        wednesday: !!schedule.wednesday ? schedule.wednesday : false,
+                        thursday: !!schedule.thursday ? schedule.thursday : false,
+                        friday: !!schedule.friday ? schedule.friday : false,
+                        saturday: !!schedule.saturday ? schedule.saturday : false,                              
+                    },{
+                        where:{ serviceId: req.params.id}
+                    })
+
+                    const updatedService = await Service.findOne({ where: { id: req.params.id}, include: ['items','schedule']})
 
                     return res.status(200).json(updatedService);
                 }
@@ -77,6 +92,7 @@ router.route('/users/:userId/services/:id?')
                     title,
                     abstract,
                     description,
+                    typeService,  
                     items,
                     schedule,
                     userId: req.params.userId,
@@ -136,6 +152,7 @@ router.route('/services')
                                 { description: { [Op.substring]: search } }
                             ]
                         }
+                        
                     });
 
                 } else {          

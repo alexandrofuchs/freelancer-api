@@ -18,6 +18,10 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      typeService:{
+        type: DataTypes.ENUM('Encomendas', 'Serviços Gerais', 'Entrega Domícilio','Consertos','Outros'),
+        defaultValue: 'Outros',
+      },
       title:{
         type: DataTypes.STRING,
       },

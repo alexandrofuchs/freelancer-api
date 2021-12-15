@@ -9,13 +9,19 @@ class Service extends Model {
                 allowNull: false,
                 primaryKey: true,
             },
+            typeService:{
+                type: DataTypes.ENUM('Encomendas', 'Serviços Gerais', 'Entrega Domícilio','Outros'),
+                defaultValue: 'Outros',
+            },
             title: {
                 type: DataTypes.STRING,
             },
             description: {
                 type: DataTypes.STRING,
             },
-
+            abstract: {
+                type: DataTypes.STRING,
+            },
         }, {
             sequelize
         })

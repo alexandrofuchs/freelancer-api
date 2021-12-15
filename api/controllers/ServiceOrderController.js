@@ -63,10 +63,17 @@ router.route('/users/:userId/serviceOrders')
 
             console.log('oi')
 
+            if(req.query.filter){
+                const foundServiceOrders = await ServiceOrder.findAll({ 
+                    where: { userId : req.params.userId, status: req.query.filter},
+                    include: [{ association: "userService" }, { association: "user" }, { association: "service"}]            
+                }); 
+                return res.status(200).json(foundServiceOrders);
+            }
+
             const foundServiceOrders = await ServiceOrder.findAll({ 
                 where: { userId : req.params.userId},
-                include: [{ association: "userService" }, { association: "user" }, { association: "service"}]
-            
+                include: [{ association: "userService" }, { association: "user" }, { association: "service"}]            
             }); 
 
             return res.status(200).json(foundServiceOrders);
@@ -119,6 +126,24 @@ router.route('/serviceOrders/:id')
             const foundServiceOrder = await ServiceOrder.findOne({ where: {id: req.params.id}});
 
             return res.status(201).json(foundServiceOrder);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Server Error!"});
+        }
+    }
+)
+.put(
+    async (req, res) => {
+        try {
+            
+            const foundServiceOrder = await ServiceOrder.findOne({ where: {id: req.params.id}});
+
+            const updated = await foundServiceOrder.setAttributes({
+                status: 'accepted',
+             }).save();
+
+            return res.status(201).json(updated);
 
         } catch (error) {
             console.log(error);
