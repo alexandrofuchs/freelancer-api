@@ -39,7 +39,7 @@ module.exports = {
         type: DataTypes.STRING,
       },
       status: {
-        type: DataTypes.ENUM('pending', 'rejected', 'accepted','confirmed','finished'),
+        type: DataTypes.ENUM('pending', 'accepted','concluded','rescheduled','cancelled'),
         defaultValue: 'pending',
       },
       createdAt: {

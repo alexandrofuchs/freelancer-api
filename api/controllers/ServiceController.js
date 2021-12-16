@@ -21,6 +21,7 @@ const Question = require('../../database/models/Question');
 const Review = require('../../database/models/Review');
 const Schedule = require('../../database/models/Schedule');
 const { isArray } = require('lodash');
+const { NONE } = require('sequelize');
 
 router.route('/users/:userId/services/:id?')
     .all(async (req, res, next) => {
@@ -136,32 +137,32 @@ router.route('/services')
 
                 const search = req.query.search ? req.query.search : null
 
-                console.log(search)
+                
 
-                if (search) {       
-                    foundServices = await Service.findAndCountAll({
-                        limit: LIMIT,
-                        offset: Number(page) == 1 ? 0 : (page - 1) * LIMIT,
-                        order: [['title', 'ASC']],
-                        where: {
-                            [Op.or]: [
-                                { title: { [Op.like]: search } },
-                                { title: { [Op.substring]: search } },
-                                { description: { [Op.substring]: search.toLowerCase() } },
-                                { description: { [Op.substring]: search.toUpperCase() } },
-                                { description: { [Op.substring]: search } }
-                            ]
-                        }
-                        
-                    });
+                let where = {};
+                if(req.query.search){
+                    where =  {
+                        [Op.or]: [
+                            { title: { [Op.substring]: req.query.search } },
+                            { description: { [Op.substring]: req.query.search } }
+                        ]
+                    }
+                }
+                if(req.query.type){
+                    where = {
+                        ...where,
+                        typeService: req.query.type,                        
+                    }
+                }
 
-                } else {          
-                    foundServices = await Service.findAndCountAll({
-                        limit: LIMIT,
-                        offset: Number(page) == 1 ? 0 : (page - 1) * LIMIT,
-                        order: [['title', 'ASC']]
-                    })
-                };
+                console.log(where)
+       
+                foundServices = await Service.findAndCountAll({
+                    limit: LIMIT,
+                    offset: Number(page) == 1 ? 0 : (page - 1) * LIMIT,
+                    order: [['title', 'ASC']],
+                    where,
+                });
 
 
 

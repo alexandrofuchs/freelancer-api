@@ -68,4 +68,37 @@ router.route('/services/:serviceId/questions')
             }
         });
 
+
+router.route('/questions/:id/answer').all(
+    async (req, res, next) => {
+    if (!isValidUUID(req.params.id)) {
+        return res.status(400).json({ error: 'ID inválido' });
+    }
+    next();
+}).put(
+    async (req, res) => {
+        try {
+
+            const { answer } = req.body;
+
+            if(!answer){
+                return res.status(400).json({ error: 'resposta inválida! '})
+            }
+
+            const foundQuestion = await Question.findOne({ where: { id: req.params.id } })
+            if (!foundQuestion){
+                return res.status(400).json({ error: 'id questão inválida' });
+            }
+
+            const result = await foundQuestion.setAttributes({
+                answer
+            }).save();
+
+            return res.status(200).json(result);
+
+        } catch (err) {
+            console.log(err.message);
+            return res.status(500).json({ error: "Server Error!" })
+        }}
+)
 module.exports = app => app.use('/', router);

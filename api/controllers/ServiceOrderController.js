@@ -48,7 +48,45 @@ router.route('/services/:id/serviceOrders')
     
 )
 
-router.route('/users/:userId/serviceOrders')
+router.route('/offerer/:userId/serviceOrders')
+.all(
+    async (req, res, next) => {
+        if (!isValidUUID(req.params.userId)) {
+            return res.status(400).json({ error: 'invalid id!' });
+        }
+        next()
+    }
+)
+.get(
+    async (req, res) => {
+        try {            
+
+            console.log('oi')
+
+            if(req.query.filter){
+                const foundServiceOrders = await ServiceOrder.findAll({ 
+                    where: { userServiceId : req.params.userId, status: req.query.filter},
+                    include: [{ association: "userService" }, { association: "user" }, { association: "service"}]            
+                }); 
+                return res.status(200).json(foundServiceOrders);
+            }
+
+            const foundServiceOrders = await ServiceOrder.findAll({ 
+                where: { userServiceId : req.params.userId},
+                include: [{ association: "userService" }, { association: "user" }, { association: "service"}]            
+            }); 
+
+            return res.status(200).json(foundServiceOrders);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Server Error!"});
+        }
+    }
+    
+)
+
+router.route('/contracting/:userId/serviceOrders')
 .all(
     async (req, res, next) => {
         if (!isValidUUID(req.params.userId)) {
@@ -85,6 +123,7 @@ router.route('/users/:userId/serviceOrders')
     }
     
 )
+
 
 router.route('/serviceOrders')
 .post(
@@ -133,6 +172,16 @@ router.route('/serviceOrders/:id')
         }
     }
 )
+
+router.route('/serviceOrders/:id/accepted')
+.all(
+    async (req, res, next) => {
+        if (!isValidUUID(req.params.id)) {
+            return res.status(400).json({ error: 'invalid id!' });
+        }
+        next();
+    }
+)
 .put(
     async (req, res) => {
         try {
@@ -151,6 +200,99 @@ router.route('/serviceOrders/:id')
         }
     }
 )
+
+router.route('/serviceOrders/:id/reschedule')
+.all(
+    async (req, res, next) => {
+        if (!isValidUUID(req.params.id)) {
+            return res.status(400).json({ error: 'invalid id!' });
+        }
+        next();
+    }
+)
+.put(
+    async (req, res) => {
+        try {
+            
+            const { date, hour } = req.body;
+
+            if(!day | !hour){
+                return res.status(400).json({ error: 'data inválida!'})
+            }
+
+            const foundServiceOrder = await ServiceOrder.findOne({ where: {id: req.params.id}});
+
+            const updated = await foundServiceOrder.setAttributes({
+                status: 'rescheduled',
+                date: date,
+                hour: hour
+             }).save();
+
+            return res.status(201).json(updated);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Server Error!"});
+        }
+    }
+)
+
+router.route('/serviceOrders/:id/concluded')
+.all(
+    async (req, res, next) => {
+        if (!isValidUUID(req.params.id)) {
+            return res.status(400).json({ error: 'invalid id!' });
+        }
+        next();
+    }
+)
+.put(
+    async (req, res) => {
+        try {
+            
+            const foundServiceOrder = await ServiceOrder.findOne({ where: {id: req.params.id}});
+
+            const updated = await foundServiceOrder.setAttributes({
+                status: 'concluded',
+             }).save();
+
+            return res.status(201).json(updated);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Server Error!"});
+        }
+    }
+)
+
+router.route('/serviceOrders/:id/cancelled')
+.all(
+    async (req, res, next) => {
+        if (!isValidUUID(req.params.id)) {
+            return res.status(400).json({ error: 'invalid id!' });
+        }
+        next();
+    }
+)
+.put(
+    async (req, res) => {
+        try {
+            
+            const foundServiceOrder = await ServiceOrder.findOne({ where: {id: req.params.id}});
+
+            const updated = await foundServiceOrder.setAttributes({
+                status: 'cancelled',
+             }).save();
+
+            return res.status(201).json(updated);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Server Error!"});
+        }
+    }
+)
+
 
 
 

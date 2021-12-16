@@ -41,6 +41,8 @@ const io = require('socket.io')(server);
 
 io.on("connection", async (socket) => {
 
+  console.log(socket.handshake.auth)
+
   console.log("usuário conectado!");
 
   const messages = await Message.findAll({attributes:['user','message','serviceOrderId']});
