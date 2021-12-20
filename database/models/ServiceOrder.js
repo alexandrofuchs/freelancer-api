@@ -37,7 +37,7 @@ class ServiceOrder extends Model {
                 type: DataTypes.STRING,
             },
             status: {
-                type: DataTypes.ENUM('pending', 'rejected', 'accepted','confirmed','finished','rescheduled','cancelled'),
+                type: DataTypes.ENUM('pending', 'accepted','concluded','rescheduled','cancelled'),
                 defaultValue: 'pending',
             },
         }, {
